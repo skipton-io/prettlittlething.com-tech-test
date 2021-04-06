@@ -32,7 +32,7 @@ class ImportProductsCommand extends Command
             $io->note(sprintf('You passed an filename: %s', $filename));
         }
 
-        if ($input->getOption('verbose')) {
+        if ($input->getOption('displayerrors')) {
             $io->note('Verbose mode: active');
             // ...
         }
