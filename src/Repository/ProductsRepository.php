@@ -18,4 +18,16 @@ class ProductsRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Products::class);
     }
+
+    public function findBySku(string $sku): ?Products
+    {
+        $queryBuilder = $this->createQueryBuilder('p');
+
+        $queryBuilder->where($queryBuilder->expr()->eq('p.sku', '?1'))
+            ->setParameter(1, $sku)
+            ->setMaxResults(1)
+            ->setFirstResult(0);
+
+        return $queryBuilder->getQuery()->getOneOrNullResult();
+    }
 }
