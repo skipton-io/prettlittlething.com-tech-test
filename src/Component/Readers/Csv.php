@@ -78,7 +78,7 @@ class Csv implements ReaderInterface
 
             // Fill any empty fields to avoid array_combine() failing
             if (($headerCount = count($this->headerColumns)) > ($rowCount = count($row))) {
-                $row = $row + array_fill($rowCount, $headerCount-$rowCount, '');
+                $row = $row + array_fill($rowCount, $headerCount-$rowCount, null);
             }
 
             yield [$rowIndex => array_combine($this->headerColumns, $row)];
