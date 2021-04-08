@@ -29,3 +29,14 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Command\:
+        resource: '../src/Command/'
+        tags: ['console.command']
+
+    App\Component\Readers\Csv:
+        arguments:
+            - '%kernel.project_dir%'
+
+    App\Component\Readers\ReaderInterface: '@App\Component\Readers\Csv'
+

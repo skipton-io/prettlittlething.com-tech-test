@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use App\Component\Imports\ProductService;
+use App\Component\Readers\ReaderInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,6 +15,17 @@ class ImportProductsCommand extends Command
 {
     protected static $defaultName = 'app:import-products';
     protected static $defaultDescription = 'Import products from a CSV file';
+
+    private ProductService $productService;
+    private ReaderInterface $reader;
+
+    public function __construct(string $name = null, ProductService $productService, ReaderInterface $reader)
+    {
+        parent::__construct($name);
+
+        $this->productService = $productService;
+        $this->reader = $reader;
+    }
 
     protected function configure()
     {
@@ -26,18 +39,25 @@ class ImportProductsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+        $this->productService->setOutput($io);
         $filename = $input->getArgument('filename');
 
         if ($filename) {
-            $io->note(sprintf('You passed an filename: %s', $filename));
+            $this->reader->setFileName($filename);
+            $io->note(sprintf('Loading file: %s', $filename));
         }
 
         if ($input->getOption('displayerrors')) {
             $io->note('Verbose mode: active');
-            // ...
+            $this->productService->setVerbose(true);
         }
 
-        $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
+        try {
+            $this->productService->import($this->reader);
+        } catch (\Throwable $e) {
+            $io->error($e->getMessage());
+            return Command::FAILURE;
+        }
 
         return Command::SUCCESS;
     }
