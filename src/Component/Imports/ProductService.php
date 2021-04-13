@@ -54,16 +54,22 @@ class ProductService
             $rowData = $row[$lineNumber];
 
             if (!$this->validateRequiredColumns($rowData)) {
-                if ($this->isVerbose()) {
-                    $this->output->error('Line: ' . $lineNumber . ', the required columns are not present.');
-                }
+                $this->log($lineNumber, $rowData[self::FIELD_SKU], 'the required columns are not present.');
                 continue;
             }
 
             if (!$this->validateDuplicateSkus($rowData[self::FIELD_SKU])) {
-                if ($this->isVerbose()) {
-                    $this->output->error('Line: ' . $lineNumber . ', the sku appears to be duplicate and has not been processed.');
-                }
+                $this->log($lineNumber, $rowData[self::FIELD_SKU], 'the sku appears to be duplicate and has not been processed.');
+                continue;
+            }
+
+            if (!$this->validateNumberOneIsGreaterThanNumberTwo($rowData[self::FIELD_PRICE], $rowData[self::FIELD_SALE_PRICE])) {
+                $this->log($lineNumber, $rowData[self::FIELD_SKU], 'the sale price is greater than the normal price.');
+                continue;
+            }
+
+            if (!$this->validatePositiveNumbers($rowData[self::FIELD_PRICE], $rowData[self::FIELD_SALE_PRICE])) {
+                $this->log($lineNumber, $rowData[self::FIELD_SKU], 'numbers found to be negative.');
                 continue;
             }
 
@@ -106,5 +112,32 @@ class ProductService
         $filteredRow = array_filter($row, 'strlen');
 
         return count(array_intersect_key(array_flip($requiredColumns), $filteredRow)) === count($requiredColumns);
+    }
+
+    protected function validateNumberOneIsGreaterThanNumberTwo(?float $numberOne, ?float $numberTwo): bool
+    {
+        if (is_null($numberOne) || is_null($numberTwo)) {
+            return true;
+        }
+
+        return ($numberOne > $numberTwo);
+    }
+
+    protected function validatePositiveNumbers(...$numbers): bool
+    {
+        foreach ($numbers as $number) {
+            if ($number < 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function log($lineNumber, $sku, $message): void
+    {
+        if ($this->isVerbose()) {
+            $this->output->error("Line: $lineNumber, SKU: $sku. ". ucfirst($message));
+        }
     }
 }
