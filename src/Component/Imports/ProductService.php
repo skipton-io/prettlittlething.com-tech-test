@@ -93,6 +93,10 @@ class ProductService
                 continue;
             }
 
+            if (!$this->validateDataLength($rowData, $lineNumber)) {
+                continue;
+            }
+
             $this->importProduct($rowData);
             $this->skusProcessed[] = $rowData[self::FIELD_SKU];
         }
@@ -149,6 +153,31 @@ class ProductService
             if ($number < 0) {
                 return false;
             }
+        }
+
+        return true;
+    }
+
+    protected function validateDataLength(array $array, int $lineNumber): bool
+    {
+        if (isset($array[self::FIELD_SKU]) && mb_strlen($array[self::FIELD_SKU]) > 50) {
+            $this->log($lineNumber, $array[self::FIELD_SKU], 'sku is too long');
+            return false;
+        }
+
+        if (isset($array[self::FIELD_DESCRIPTION]) && mb_strlen($array[self::FIELD_DESCRIPTION]) > 255) {
+            $this->log($lineNumber, $array[self::FIELD_SKU], 'description is too long');
+            return false;
+        }
+
+        if (isset($array[self::FIELD_PRICE]) && strlen(round($array[self::FIELD_PRICE])) > 8) {
+            $this->log($lineNumber, $array[self::FIELD_SKU], 'price is too long');
+            return false;
+        }
+
+        if (isset($array[self::FIELD_SALE_PRICE]) && strlen(round($array[self::FIELD_SALE_PRICE])) > 8) {
+            $this->log($lineNumber, $array[self::FIELD_SKU], 'special price is too long');
+            return false;
         }
 
         return true;
