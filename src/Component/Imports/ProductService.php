@@ -51,7 +51,27 @@ class ProductService
         $reader->setFieldSeparatedValue("|");
         foreach ($reader->load() as $row) {
             $lineNumber = array_key_first($row);
-            $rowData = $row[$lineNumber];
+            // Filter out empty values
+            $rowFiltered = array_filter($row[$lineNumber], 'strlen');
+            // Pass filtered array into filter_var
+            $rowData = filter_var_array($rowFiltered, [
+                self::FIELD_SKU => [
+                    'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                    'flags' => FILTER_REQUIRE_SCALAR,
+                ],
+                self::FIELD_DESCRIPTION => [
+                    'filter' => FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                    'flags' => FILTER_REQUIRE_SCALAR,
+                ],
+                self::FIELD_PRICE => [
+                    'filter' => FILTER_SANITIZE_NUMBER_FLOAT,
+                    'flags' => FILTER_FLAG_ALLOW_FRACTION | FILTER_VALIDATE_FLOAT,
+                ],
+                self::FIELD_SALE_PRICE => [
+                    'filter' => FILTER_SANITIZE_NUMBER_FLOAT,
+                    'flags' => FILTER_FLAG_ALLOW_FRACTION | FILTER_VALIDATE_FLOAT,
+                ]
+            ]);
 
             if (!$this->validateRequiredColumns($rowData)) {
                 $this->log($lineNumber, $rowData[self::FIELD_SKU], 'the required columns are not present.');
