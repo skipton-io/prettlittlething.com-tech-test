@@ -2,6 +2,7 @@
 
 namespace App\Component\Imports;
 
+use App\Component\Output\ProductImportInterface;
 use App\Component\Readers\ReaderInterface;
 use App\Entity\Products;
 use App\Repository\ProductsRepository;
@@ -15,7 +16,7 @@ class ProductService
     const FIELD_PRICE = 'normal_price';
     const FIELD_SALE_PRICE = 'special_price';
     protected EntityManagerInterface $entityManager;
-    protected StyleInterface $output;
+    protected ProductImportInterface $output;
     protected array $skusProcessed = [];
     protected bool $verbose = false;
 
@@ -35,7 +36,7 @@ class ProductService
         return $this;
     }
 
-    public function getOutput(): StyleInterface
+    public function getOutput(): ProductImportInterface
     {
         return $this->output;
     }
@@ -49,6 +50,9 @@ class ProductService
     public function import(ReaderInterface $reader)
     {
         $reader->setFieldSeparatedValue("|");
+        $countNewProducts = 0;
+        $countUpdatedProducts = 0;
+
         foreach ($reader->load() as $row) {
             $lineNumber = array_key_first($row);
             // Filter out empty values
@@ -97,20 +101,29 @@ class ProductService
                 continue;
             }
 
-            $this->importProduct($rowData);
+            $this->importProduct($rowData, $countNewProducts, $countUpdatedProducts);
             $this->skusProcessed[] = $rowData[self::FIELD_SKU];
         }
 
         $this->entityManager->flush();
+
+        $this->output->drawResults([
+            ProductImportInterface::FIELD_ROWS => count($this->skusProcessed),
+            ProductImportInterface::FIELD_NEW => $countNewProducts,
+            ProductImportInterface::FIELD_UPDATED => $countUpdatedProducts
+        ]);
     }
 
-    protected function importProduct(array $row): void
+    protected function importProduct(array $row, &$countNewProducts, &$countUpdatedProducts): void
     {
         /** @var ProductsRepository $productsRepository */
         $productsRepository = $this->entityManager->getRepository(Products::class);
 
         if (!$entity = $productsRepository->findBySku($row[self::FIELD_SKU])) {
             $entity = new Products();
+            $countNewProducts++;
+        } else {
+            $countUpdatedProducts++;
         }
         $entity->setSku($row[self::FIELD_SKU])
             ->setDescription($row[self::FIELD_DESCRIPTION])

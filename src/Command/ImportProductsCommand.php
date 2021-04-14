@@ -3,13 +3,13 @@
 namespace App\Command;
 
 use App\Component\Imports\ProductService;
+use App\Component\Output\ProductImport;
 use App\Component\Readers\ReaderInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ImportProductsCommand extends Command
 {
@@ -38,7 +38,7 @@ class ImportProductsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
+        $io = new ProductImport($input, $output);
         $this->productService->setOutput($io);
         $filename = $input->getArgument('filename');
 
