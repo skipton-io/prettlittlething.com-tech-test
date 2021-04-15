@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=ProductsRepository::class)
+ * @ORM\Table(indexes={@ORM\Index(name="log_id", columns={"log_id"})})
  */
 class Products
 {
@@ -36,6 +37,11 @@ class Products
      * @ORM\Column(type="float", nullable=true)
      */
     private $special_price;
+
+    /**
+     * @ORM\Column(type="guid", nullable=true)
+     */
+    private $logId;
 
     public function getId(): ?int
     {
@@ -86,6 +92,18 @@ class Products
     public function setSpecialPrice(?float $special_price): self
     {
         $this->special_price = $special_price;
+
+        return $this;
+    }
+
+    public function getLogId(): ?string
+    {
+        return $this->logId;
+    }
+
+    public function setLogId(?string $logId): self
+    {
+        $this->logId = $logId;
 
         return $this;
     }

@@ -30,4 +30,17 @@ class ProductsRepository extends ServiceEntityRepository
 
         return $queryBuilder->getQuery()->getOneOrNullResult();
     }
+
+    public function findByNotLogId(string $logId): string
+    {
+        $queryBuilder = $this->createQueryBuilder('p');
+
+        $queryBuilder
+            ->select('count(p.id)')
+            ->where($queryBuilder->expr()->neq('p.logId', ':logid'))
+            ->orWhere($queryBuilder->expr()->isNull('p.logId'))
+            ->setParameter('logid', $logId);
+
+        return $queryBuilder->getQuery()->getSingleScalarResult();
+    }
 }

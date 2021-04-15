@@ -7,6 +7,7 @@ use App\Component\Readers\ReaderInterface;
 use App\Entity\Products;
 use App\Repository\ProductsRepository;
 use Doctrine\Persistence\ObjectManager;
+use Ramsey\Uuid\Uuid;
 
 class ProductService
 {
@@ -48,6 +49,8 @@ class ProductService
 
     public function import(ReaderInterface $reader)
     {
+        $logId = Uuid::uuid4();
+
         $reader->setFieldSeparatedValue("|");
         $reader->setHeaderValuesRequired([
             self::FIELD_SKU, self::FIELD_DESCRIPTION, self::FIELD_PRICE, self::FIELD_SALE_PRICE
@@ -110,7 +113,7 @@ class ProductService
                 continue;
             }
 
-            $this->importProduct($rowData, $countNewProducts, $countUpdatedProducts);
+            $this->importProduct($rowData, $logId, $countNewProducts, $countUpdatedProducts);
             $this->skusProcessed[] = $rowData[self::FIELD_SKU];
 
             if (($lineNumber % 1000) === 0) {
@@ -126,6 +129,22 @@ class ProductService
         $this->objectManager->flush();
         $this->objectManager->clear();
 
+        // Should products be deleted?
+        $repository = $this->objectManager->getRepository(Products::class);
+        $productsNotInImport = $repository->findByNotLogId($logId);
+        if ($productsNotInImport) {
+            $this->output->ask('Would you like to delete products not covered in this import?', 'no', function($value) use($logId)  {
+                if ((strcasecmp($value, 'yes') <> 0) && strcasecmp($value, 'no') <> 0) {
+                    throw new \RuntimeException('Yes or No must be provided.');
+                }
+
+                if (strcasecmp('yes', $value) === 0) {
+                    $this->deleteProducts($logId);
+                }
+            });
+        }
+
+
         $this->output->drawResults([
             Output\ProductImport::FIELD_ROWS => count($this->skusProcessed) + $countSkippedProducts,
             Output\ProductImport::FIELD_NEW => $countNewProducts,
@@ -134,7 +153,19 @@ class ProductService
         ]);
     }
 
-    protected function importProduct(array $row, &$countNewProducts, &$countUpdatedProducts): void
+    protected function deleteProducts(string $logId): void
+    {
+        $conn = $this->objectManager->getConnection();
+
+        $sql = '
+            DELETE FROM products 
+            WHERE log_id IS NULL OR log_id <> :logid
+            ';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['logid' => $logId]);
+    }
+
+    protected function importProduct(array $row, string $logId, &$countNewProducts, &$countUpdatedProducts): void
     {
         /** @var ProductsRepository $productsRepository */
         $productsRepository = $this->objectManager->getRepository(Products::class);
@@ -148,7 +179,9 @@ class ProductService
         $entity->setSku($row[self::FIELD_SKU])
             ->setDescription($row[self::FIELD_DESCRIPTION])
             ->setNormalPrice($row[self::FIELD_PRICE])
-            ->setSpecialPrice($row[self::FIELD_SALE_PRICE]);
+            ->setSpecialPrice($row[self::FIELD_SALE_PRICE])
+            ->setLogId($logId)
+        ;
 
         $this->objectManager->persist($entity);
     }
