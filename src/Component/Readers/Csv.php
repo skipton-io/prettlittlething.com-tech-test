@@ -5,11 +5,13 @@ namespace App\Component\Readers;
 use App\Component\Output;
 use App\Component\Readers\Exception\FileHeaderNotPresentException;
 use App\Component\Readers\Exception\FileHeaderValuesNotCorrectException;
+use App\Component\Readers\Exception\SourceFileNotFoundException;
+use App\Component\Readers\Exception\SourceFileOutsideBaseDirException;
 
 class Csv implements ReaderInterface
 {
     protected string $rootPath;
-    protected string $fileName;
+    protected ?string $fileName = null;
     protected string $fieldSeparatedValue = ',';
     protected array $headerValuesRequired = [];
     protected array $headerColumns = [];
@@ -31,7 +33,7 @@ class Csv implements ReaderInterface
         return $this;
     }
 
-    public function getFileName(): string
+    public function getFileName(): ?string
     {
         return $this->fileName;
     }
@@ -67,11 +69,11 @@ class Csv implements ReaderInterface
     public function load(): \Generator
     {
         $file = realpath($this->getFileName());
-        if ($file === false) {
-            throw new \Exception('File cannot be found. Please check the path and try again.');
+        if ($file === false || !is_file($file)) {
+            throw new SourceFileNotFoundException('File cannot be found. Please check the path and try again.');
         }
         if (!stristr($file, $this->rootPath)) {
-            throw new \Exception('File path is not within: ' . $this->rootPath);
+            throw new SourceFileOutsideBaseDirException('File path is not within: ' . $this->rootPath);
         }
         $fopen = fopen($file, 'r');
 
