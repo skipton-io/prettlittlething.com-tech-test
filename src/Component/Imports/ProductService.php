@@ -54,6 +54,7 @@ class ProductService
         ]);
         $countNewProducts = 0;
         $countUpdatedProducts = 0;
+        $this->objectManager->getConnection()->getConfiguration()->setSQLLogger(null);
 
         foreach ($reader->load() as $row) {
             $lineNumber = array_key_first($row);
@@ -106,8 +107,11 @@ class ProductService
             $this->importProduct($rowData, $countNewProducts, $countUpdatedProducts);
             $this->skusProcessed[] = $rowData[self::FIELD_SKU];
 
-            if (($lineNumber % 1000) === 0) {
-                $this->output->note('Memory Used: '. memory_get_usage(true));
+            if (($lineNumber % 100) === 0) {
+                $this->logMemoryUsage();
+            }
+
+            if (($lineNumber % 25) === 0) {
                 $this->objectManager->flush();
                 $this->objectManager->clear();
             }
@@ -140,7 +144,6 @@ class ProductService
             ->setSpecialPrice($row[self::FIELD_SALE_PRICE]);
 
         $this->objectManager->persist($entity);
-        $this->objectManager->clear();
     }
 
     protected function validateDuplicateSkus(string $sku): bool
@@ -210,6 +213,13 @@ class ProductService
     {
         if ($this->isVerbose()) {
             $this->output->error("Line: $lineNumber, SKU: $sku. ". ucfirst($message));
+        }
+    }
+
+    protected function logMemoryUsage(): void
+    {
+        if ($this->isVerbose()) {
+            $this->output->memoryUsage();
         }
     }
 }
