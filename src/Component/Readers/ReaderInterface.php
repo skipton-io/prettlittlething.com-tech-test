@@ -10,5 +10,7 @@ interface ReaderInterface
 
     public function setFieldSeparatedValue(string $fieldSeparatedValue): ReaderInterface;
 
+    public function setHeaderValuesRequired(array $header): ReaderInterface;
+
     public function load(): \Generator;
 }

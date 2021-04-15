@@ -50,6 +50,9 @@ class ProductService
     public function import(ReaderInterface $reader)
     {
         $reader->setFieldSeparatedValue("|");
+        $reader->setHeaderValuesRequired([
+            self::FIELD_SKU, self::FIELD_DESCRIPTION, self::FIELD_PRICE, self::FIELD_SALE_PRICE
+        ]);
         $countNewProducts = 0;
         $countUpdatedProducts = 0;
 

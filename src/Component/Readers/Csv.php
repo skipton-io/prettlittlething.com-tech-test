@@ -3,6 +3,8 @@
 namespace App\Component\Readers;
 
 use App\Component\Imports\ProductService;
+use App\Component\Readers\Exception\FileHeaderNotPresentException;
+use App\Component\Readers\Exception\FileHeaderValuesNotCorrectException;
 use Symfony\Component\Console\Style\StyleInterface;
 
 class Csv implements ReaderInterface
@@ -10,6 +12,7 @@ class Csv implements ReaderInterface
     protected string $rootPath;
     protected string $fileName;
     protected string $fieldSeparatedValue = ',';
+    protected array $headerValuesRequired = [];
     protected array $headerColumns = [];
     protected StyleInterface $output;
 
@@ -51,6 +54,17 @@ class Csv implements ReaderInterface
         return $this;
     }
 
+    public function getHeaderValuesRequired(): array
+    {
+        return $this->headerValuesRequired;
+    }
+
+    public function setHeaderValuesRequired(array $headerValuesRequired): Csv
+    {
+        $this->headerValuesRequired = $headerValuesRequired;
+        return $this;
+    }
+
     public function load(): \Generator
     {
         $file = realpath($this->getFileName());
@@ -67,12 +81,20 @@ class Csv implements ReaderInterface
             $rowIndex++;
             $row = fgetcsv($fopen, 4096, $this->getFieldSeparatedValue());
 
-            if ($row === false) {
-                continue; // skip empty rows
+            if ($rowIndex == 1 && empty(array_filter($row, 'strlen'))) {
+                throw new FileHeaderNotPresentException('The header line is blank');
             }
 
             if ($rowIndex === 1) {
+                if (!empty(array_diff($row, $this->headerValuesRequired))) {
+                    throw new FileHeaderValuesNotCorrectException('The header columns do not match: '. implode(', ', $this->headerValuesRequired));
+                }
+
                 $this->headerColumns = $row; // save header row
+                continue;
+            }
+
+            if ($row === false) {
                 continue;
             }
 
