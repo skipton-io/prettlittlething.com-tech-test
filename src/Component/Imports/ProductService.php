@@ -2,13 +2,11 @@
 
 namespace App\Component\Imports;
 
-use App\Component\Output\ProductImport;
-use App\Component\Output\ProductImportInterface;
+use App\Component\Output;
 use App\Component\Readers\ReaderInterface;
 use App\Entity\Products;
 use App\Repository\ProductsRepository;
 use Doctrine\Persistence\ObjectManager;
-use Symfony\Component\Console\Style\StyleInterface;
 
 class ProductService
 {
@@ -17,7 +15,7 @@ class ProductService
     const FIELD_PRICE = 'normal_price';
     const FIELD_SALE_PRICE = 'special_price';
     protected ObjectManager $objectManager;
-    protected ProductImportInterface $output;
+    protected Output\ProductImport $output;
     protected array $skusProcessed = [];
     protected bool $verbose = false;
 
@@ -37,12 +35,12 @@ class ProductService
         return $this;
     }
 
-    public function getOutput(): ProductImportInterface
+    public function getOutput(): Output\ProductImport
     {
         return $this->output;
     }
 
-    public function setOutput(StyleInterface $output): ProductService
+    public function setOutput(Output\ProductImport $output): ProductService
     {
         $this->output = $output;
         return $this;
@@ -119,9 +117,9 @@ class ProductService
         $this->objectManager->clear();
 
         $this->output->drawResults([
-            ProductImport::FIELD_ROWS => count($this->skusProcessed),
-            ProductImport::FIELD_NEW => $countNewProducts,
-            ProductImport::FIELD_UPDATED => $countUpdatedProducts
+            Output\ProductImport::FIELD_ROWS => count($this->skusProcessed),
+            Output\ProductImport::FIELD_NEW => $countNewProducts,
+            Output\ProductImport::FIELD_UPDATED => $countUpdatedProducts
         ]);
     }
 
