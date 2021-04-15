@@ -6,7 +6,7 @@ use App\Component\Output\ProductImportInterface;
 use App\Component\Readers\ReaderInterface;
 use App\Entity\Products;
 use App\Repository\ProductsRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\Console\Style\StyleInterface;
 
 class ProductService
@@ -15,14 +15,14 @@ class ProductService
     const FIELD_DESCRIPTION = 'description';
     const FIELD_PRICE = 'normal_price';
     const FIELD_SALE_PRICE = 'special_price';
-    protected EntityManagerInterface $entityManager;
+    protected ObjectManager $objectManager;
     protected ProductImportInterface $output;
     protected array $skusProcessed = [];
     protected bool $verbose = false;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(ObjectManager $objectManager)
     {
-        $this->entityManager = $entityManager;
+        $this->objectManager = $objectManager;
     }
 
     public function isVerbose(): bool
@@ -106,9 +106,16 @@ class ProductService
 
             $this->importProduct($rowData, $countNewProducts, $countUpdatedProducts);
             $this->skusProcessed[] = $rowData[self::FIELD_SKU];
+
+            if (($lineNumber % 1000) === 0) {
+                $this->output->note('Memory Used: '. memory_get_usage(true));
+                $this->objectManager->flush();
+                $this->objectManager->clear();
+            }
         }
 
-        $this->entityManager->flush();
+        $this->objectManager->flush();
+        $this->objectManager->clear();
 
         $this->output->drawResults([
             ProductImportInterface::FIELD_ROWS => count($this->skusProcessed),
@@ -120,7 +127,7 @@ class ProductService
     protected function importProduct(array $row, &$countNewProducts, &$countUpdatedProducts): void
     {
         /** @var ProductsRepository $productsRepository */
-        $productsRepository = $this->entityManager->getRepository(Products::class);
+        $productsRepository = $this->objectManager->getRepository(Products::class);
 
         if (!$entity = $productsRepository->findBySku($row[self::FIELD_SKU])) {
             $entity = new Products();
@@ -133,7 +140,8 @@ class ProductService
             ->setNormalPrice($row[self::FIELD_PRICE])
             ->setSpecialPrice($row[self::FIELD_SALE_PRICE]);
 
-        $this->entityManager->persist($entity);
+        $this->objectManager->persist($entity);
+        $this->objectManager->clear();
     }
 
     protected function validateDuplicateSkus(string $sku): bool
