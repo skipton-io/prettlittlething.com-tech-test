@@ -107,7 +107,7 @@ class ProductService
             $this->importProduct($rowData, $countNewProducts, $countUpdatedProducts);
             $this->skusProcessed[] = $rowData[self::FIELD_SKU];
 
-            if (($lineNumber % 100) === 0) {
+            if (($lineNumber % 1000) === 0) {
                 $this->logMemoryUsage();
             }
 
