@@ -2,9 +2,9 @@
 
 namespace App\Component\Readers;
 
+use App\Component\Output;
 use App\Component\Readers\Exception\FileHeaderNotPresentException;
 use App\Component\Readers\Exception\FileHeaderValuesNotCorrectException;
-use Symfony\Component\Console\Style\StyleInterface;
 
 class Csv implements ReaderInterface
 {
@@ -13,7 +13,7 @@ class Csv implements ReaderInterface
     protected string $fieldSeparatedValue = ',';
     protected array $headerValuesRequired = [];
     protected array $headerColumns = [];
-    protected StyleInterface $output;
+    protected Output\ProductImport $output;
 
     public function __construct(string $rootPath)
     {
@@ -42,12 +42,12 @@ class Csv implements ReaderInterface
         return $this;
     }
 
-    public function getOutput(): StyleInterface
+    public function getOutput(): Output\ProductImport
     {
         return $this->output;
     }
 
-    public function setOutput(StyleInterface $output): self
+    public function setOutput(Output\ProductImport $output): self
     {
         $this->output = $output;
         return $this;
