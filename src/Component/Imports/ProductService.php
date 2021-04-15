@@ -177,7 +177,7 @@ class ProductService
             return true;
         }
 
-        return ($numberOne > $numberTwo);
+        return ($numberOne === $numberTwo || $numberOne > $numberTwo);
     }
 
     protected function validatePositiveNumbers(...$numbers): bool
