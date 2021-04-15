@@ -54,6 +54,7 @@ class ProductService
         ]);
         $countNewProducts = 0;
         $countUpdatedProducts = 0;
+        $countSkippedProducts = 0;
         $this->objectManager->getConnection()->getConfiguration()->setSQLLogger(null);
 
         foreach ($reader->load() as $row) {
@@ -81,26 +82,31 @@ class ProductService
             ]);
 
             if (!$this->validateRequiredColumns($rowData)) {
+                $countSkippedProducts++;
                 $this->log($lineNumber, $rowData[self::FIELD_SKU], 'the required columns are not present.');
                 continue;
             }
 
             if (!$this->validateDuplicateSkus($rowData[self::FIELD_SKU])) {
+                $countSkippedProducts++;
                 $this->log($lineNumber, $rowData[self::FIELD_SKU], 'the sku appears to be duplicate and has not been processed.');
                 continue;
             }
 
             if (!$this->validateNumberOneIsGreaterThanNumberTwo($rowData[self::FIELD_PRICE], $rowData[self::FIELD_SALE_PRICE])) {
+                $countSkippedProducts++;
                 $this->log($lineNumber, $rowData[self::FIELD_SKU], 'the sale price is greater than the normal price.');
                 continue;
             }
 
             if (!$this->validatePositiveNumbers($rowData[self::FIELD_PRICE], $rowData[self::FIELD_SALE_PRICE])) {
+                $countSkippedProducts++;
                 $this->log($lineNumber, $rowData[self::FIELD_SKU], 'numbers found to be negative.');
                 continue;
             }
 
             if (!$this->validateDataLength($rowData, $lineNumber)) {
+                $countSkippedProducts++;
                 continue;
             }
 
@@ -121,9 +127,10 @@ class ProductService
         $this->objectManager->clear();
 
         $this->output->drawResults([
-            Output\ProductImport::FIELD_ROWS => count($this->skusProcessed),
+            Output\ProductImport::FIELD_ROWS => count($this->skusProcessed) + $countSkippedProducts,
             Output\ProductImport::FIELD_NEW => $countNewProducts,
-            Output\ProductImport::FIELD_UPDATED => $countUpdatedProducts
+            Output\ProductImport::FIELD_UPDATED => $countUpdatedProducts,
+            Output\ProductImport::FIELD_SKIPPED => $countSkippedProducts
         ]);
     }
 

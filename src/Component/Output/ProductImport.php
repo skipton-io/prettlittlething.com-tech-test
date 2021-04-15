@@ -7,13 +7,14 @@ class ProductImport extends \Symfony\Component\Console\Style\SymfonyStyle
     const FIELD_NEW = 'new';
     const FIELD_UPDATED = 'updated';
     const FIELD_ROWS = 'rows';
+    const FIELD_SKIPPED = 'skipped';
 
     public function drawResults(array $data): void
     {
         $this->table([
-            'Rows', 'New Products', 'Updated Products'
+            'Rows', 'New Products', 'Updated Products', 'Skipped Products'
         ], [
-            [$data[ProductImport::FIELD_ROWS], $data[ProductImport::FIELD_NEW], $data[ProductImport::FIELD_UPDATED]]
+            [$data[ProductImport::FIELD_ROWS], $data[ProductImport::FIELD_NEW], $data[ProductImport::FIELD_UPDATED], $data[ProductImport::FIELD_SKIPPED]]
         ]);
     }
 
