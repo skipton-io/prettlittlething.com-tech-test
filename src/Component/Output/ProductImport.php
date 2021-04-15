@@ -2,7 +2,7 @@
 
 namespace App\Component\Output;
 
-class ProductImport extends \Symfony\Component\Console\Style\SymfonyStyle implements ProductImportInterface
+class ProductImport extends \Symfony\Component\Console\Style\SymfonyStyle
 {
     const FIELD_NEW = 'new';
     const FIELD_UPDATED = 'updated';
