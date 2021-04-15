@@ -2,6 +2,7 @@
 
 namespace App\Component\Imports;
 
+use App\Component\Output\ProductImport;
 use App\Component\Output\ProductImportInterface;
 use App\Component\Readers\ReaderInterface;
 use App\Entity\Products;
@@ -118,9 +119,9 @@ class ProductService
         $this->objectManager->clear();
 
         $this->output->drawResults([
-            ProductImportInterface::FIELD_ROWS => count($this->skusProcessed),
-            ProductImportInterface::FIELD_NEW => $countNewProducts,
-            ProductImportInterface::FIELD_UPDATED => $countUpdatedProducts
+            ProductImport::FIELD_ROWS => count($this->skusProcessed),
+            ProductImport::FIELD_NEW => $countNewProducts,
+            ProductImport::FIELD_UPDATED => $countUpdatedProducts
         ]);
     }
 
