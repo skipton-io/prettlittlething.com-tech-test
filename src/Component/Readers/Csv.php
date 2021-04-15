@@ -2,7 +2,6 @@
 
 namespace App\Component\Readers;
 
-use App\Component\Imports\ProductService;
 use App\Component\Readers\Exception\FileHeaderNotPresentException;
 use App\Component\Readers\Exception\FileHeaderValuesNotCorrectException;
 use Symfony\Component\Console\Style\StyleInterface;
