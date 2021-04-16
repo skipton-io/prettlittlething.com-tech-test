@@ -9,7 +9,8 @@
 * Create a file with pipe `|` character as a field separator.
 * From the project root run `php bin/console app:import-products --displayerrors ./path/to/product-import` on the command line.
 
-## Roadmap
-Should time have allowed - I would like to have done the following:
-* Refactor the validation to use custom Symfony constraints - however I was unable to get this working :(
-* Finish the requirements
+## Deleting Products
+After the initial import, you will be prompted to delete products if products in the database have not been affected by the current import. The default value is 'no' as selecting 'yes' will delete all products not found in the current file or have validation errors.
+
+## Console arguments
+There is one optional argument `--displayerrors`. This will display validation errors and memory usage every 1,000 records processed.
